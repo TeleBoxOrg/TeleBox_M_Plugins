@@ -708,7 +708,7 @@ class BsPlugin extends Plugin {
     [pluginName]: async (msg: MessageContext) => {
       const client = await getGlobalClient();
       if (!client) {
-        await msg.edit({ text: "❌ <b>客户端未初始化</b>"});
+        await msg.edit({ text: html`❌ <b>客户端未初始化</b>` });
         return;
       }
 

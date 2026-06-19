@@ -1461,7 +1461,7 @@ async function handleTelegraph(msg: Api.Message, args: string[]): Promise<void> 
     case "list":
       const posts = JSON.parse(ConfigManager.get(CONFIG_KEYS.GEMINI_TELEGRAPH_POSTS, "{}"));
       if (Object.keys(posts).length === 0) {
-        await msg.edit({ text: "<b>尚未创建Telegraph文章。</b>", parseMode: "html" });
+        await msg.edit({ text: html`<b>尚未创建Telegraph文章。</b>`, parseMode: "html" });
         return;
       }
       
@@ -1549,7 +1549,7 @@ async function handlePrompt(msg: Api.Message, args: string[]): Promise<void> {
       
     case "list":
       if (Object.keys(prompts).length === 0) {
-        await msg.edit({ text: "<b>未保存任何系统提示。</b>", parseMode: "html" });
+        await msg.edit({ text: html`<b>未保存任何系统提示。</b>`, parseMode: "html" });
         return;
       }
       const promptsList = Object.entries(prompts)

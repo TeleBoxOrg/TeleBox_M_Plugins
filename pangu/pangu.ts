@@ -313,9 +313,9 @@ class PanguPlugin extends Plugin {
         if (list.length === 0) {
           await msg.edit({ text: html`📝 白名单列表为空` });
         } else {
-          let text = `📝 <b>白名单列表</b> (${list.length} 个)\n\n`;
+          let text = `📝 <b>白名单列表</b> (${list.length} 个)<br><br>`;
           list.forEach((id: string, index: number) => {
-            text += `${index + 1}. <code>${htmlEscape(id)}</code>\n`;
+            text += `${index + 1}. <code>${htmlEscape(id)}</code><br>`;
           });
           await msg.edit({ text: html(text) });
         }
@@ -360,9 +360,9 @@ class PanguPlugin extends Plugin {
         if (list.length === 0) {
           await msg.edit({ text: html`📝 黑名单列表为空` });
         } else {
-          let text = `📝 <b>黑名单列表</b> (${list.length} 个)\n\n`;
+          let text = `📝 <b>黑名单列表</b> (${list.length} 个)<br><br>`;
           list.forEach((id: string, index: number) => {
-            text += `${index + 1}. <code>${htmlEscape(id)}</code>\n`;
+            text += `${index + 1}. <code>${htmlEscape(id)}</code><br>`;
           });
           await msg.edit({ text: html(text) });
         }

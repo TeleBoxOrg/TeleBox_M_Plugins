@@ -163,7 +163,7 @@ class StickerPlugin extends Plugin {
   private async handleSticker(msg: MessageContext): Promise<void> {
     const client = await getGlobalClient();
     if (!client) {
-      await msg.edit({ text: "❌ <b>客户端未初始化</b>" });
+      await msg.edit({ text: html`❌ <b>客户端未初始化</b>` });
       return;
     }
 
@@ -188,7 +188,7 @@ class StickerPlugin extends Plugin {
       }
 
       // Case 2: Replied to a sticker, handle saving
-      await msg.edit({ text: "🤔 <b>正在处理贴纸...</b>" });
+      await msg.edit({ text: html`🤔 <b>正在处理贴纸...</b>` });
 
       const stickerMedia = repliedMsg.media;
       if (stickerMedia.type !== 'sticker') {
@@ -230,7 +230,7 @@ class StickerPlugin extends Plugin {
         );
       }
       
-      await msg.edit({ text: "✅ <b>贴纸信息已解析，正在查找贴纸包...</b>" });
+      await msg.edit({ text: html`✅ <b>贴纸信息已解析，正在查找贴纸包...</b>` });
 
       const { packName, shouldCreate } = await this.findOrCreatePack(
         client,
@@ -272,7 +272,7 @@ class StickerPlugin extends Plugin {
       
       if (error.message?.includes("MESSAGE_TOO_LONG")) {
         await msg.edit({
-          text: "❌ <b>消息过长</b>\n\n请减少内容长度或使用文件发送",
+          text: html`❌ <b>消息过长</b><br><br>请减少内容长度或使用文件发送`,
         });
         return;
       }
@@ -312,7 +312,7 @@ class StickerPlugin extends Plugin {
     if (args.length === 1) {
       if (args[0].toLowerCase() === "cancel") {
         await ConfigManager.remove(CONFIG_KEYS.DEFAULT_PACK);
-        await msg.edit({ text: "✅ <b>已取消默认贴纸包。</b>" });
+        await msg.edit({ text: html`✅ <b>已取消默认贴纸包。</b>` });
       } else { // Set new default pack
         const packName = args[0];
         await msg.edit({ text: `🤔 <b>正在验证贴纸包</b> <code>${htmlEscape(packName)}</code>...` });

@@ -211,7 +211,7 @@ async function installDependencies(msg: MessageContext): Promise<void> {
       console.log("[SUCCESS] Installed 'sshpass'.");
     }
     await msg.edit({
-      text: "✅ <b>依赖安装完成！</b>\n\n为了使插件生效，请现在<b>重启TeleBox</b>。",
+      text: html`✅ <b>依赖安装完成！</b><br><br>为了使插件生效，请现在<b>重启TeleBox</b>。`
     });
     dependenciesInstalled = false;
   } catch (error: any) {
@@ -458,7 +458,7 @@ const speedtest = async (msg: MessageContext): Promise<void> => {
   if (!dependenciesInstalled) {
     if (isInstalling)
       await msg.edit({
-        text: "⏳ <b>依赖已在安装中...</b>",
+        text: html`⏳ <b>依赖已在安装中...</b>`
       });
     else {
       await msg.edit({
@@ -482,7 +482,7 @@ const speedtest = async (msg: MessageContext): Promise<void> => {
         const newTimeout = parseInt(args[1]);
         if (isNaN(newTimeout) || newTimeout < 10 || newTimeout > 600) {
           await msg.edit({
-            text: "❌ <b>无效的超时时间</b>\n\n请输入10到600之间的秒数。",
+            text: html`❌ <b>无效的超时时间</b><br><br>请输入10到600之间的秒数。`
           });
           return;
         }
@@ -590,7 +590,7 @@ const speedtest = async (msg: MessageContext): Promise<void> => {
         const newName = args.slice(2).join(" ");
         if (isNaN(displayId) || displayId < 1 || !newName) {
           await msg.edit({
-            text: "❌ <b>参数错误</b>\n\n请使用: <code>sl rename &lt;显示序号&gt; &lt;新别名&gt;</code>",
+            text: html`❌ <b>参数错误</b><br><br>请使用: <code>sl rename &lt;显示序号&gt; &lt;新别名&gt;</code>`
           });
           return;
         }

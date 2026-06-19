@@ -8,6 +8,7 @@ import {
 } from "@utils/globalClient";
 // TelegramClient type removed - using any for client references
 import { MessageContext } from "@mtcute/dispatcher";
+import { html } from "@mtcute/html-parser";
 import { safeGetMessages } from "@utils/safeGetMessages";
 import {
   safeForwardMessage,
@@ -1256,7 +1257,7 @@ class ShiftPlugin extends Plugin {
       const client = await getGlobalClient();
       if (!client) {
         await msg.edit({
-          text: "❌ <b>客户端未初始化</b>",
+          text: html`❌ <b>客户端未初始化</b>`
         });
         return;
       }
@@ -1499,7 +1500,7 @@ class ShiftPlugin extends Plugin {
             });
           } else {
             await msg.edit({
-              text: "❌ <b>保存转发规则失败</b>",
+              text: html`❌ <b>保存转发规则失败</b>`
             });
           }
           return;
@@ -1660,7 +1661,7 @@ class ShiftPlugin extends Plugin {
 
             if (rows.length === 0) {
               await msg.edit({
-                text: "📊 <b>暂无转发统计数据</b>",
+                text: html`📊 <b>暂无转发统计数据</b>`
               });
               return;
             }

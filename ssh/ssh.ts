@@ -332,7 +332,7 @@ class SSHPlugin extends Plugin {
     
     if (!canExecute) {
       await msg.edit({
-        text: "🔒 <b>权限限制</b>\n\n此SSH管理插件只能在以下位置执行：\n• 收藏夹\n• 已设置的目标会话\n\n💡 当前目标: <code>" + htmlEscape(targetChat === "me" ? "收藏夹" : targetChat) + "</code>\n⚠️ 请在允许的位置使用此插件",
+        text: html`🔒 <b>权限限制</b><br><br>此SSH管理插件只能在以下位置执行：<br>• 收藏夹<br>• 已设置的目标会话<br><br>💡 当前目标: <code>`
       });
       return;
     }
@@ -641,7 +641,7 @@ class SSHPlugin extends Plugin {
         await execAsync(`test -f ${authorizedKeysPath}`);
       } catch {
         await msg.edit({
-          text: "❌ <b>未找到授权密钥文件</b>\n\n文件路径: <code>/root/.ssh/authorized_keys</code>\n状态: 不存在",
+          text: html`❌ <b>未找到授权密钥文件</b><br><br>文件路径: <code>/root/.ssh/authorized_keys</code><br>状态: 不存在`
         });
         return;
       }
@@ -652,7 +652,7 @@ class SSHPlugin extends Plugin {
       
       if (lines.length === 0) {
         await msg.edit({
-          text: "📋 <b>授权密钥列表</b>\n\n当前没有任何授权密钥",
+          text: html`📋 <b>授权密钥列表</b><br><br>当前没有任何授权密钥`
         });
         return;
       }
@@ -773,7 +773,7 @@ class SSHPlugin extends Plugin {
         await execAsync(`test -f ${authorizedKeysPath}`);
       } catch {
         await msg.edit({
-          text: "❌ <b>未找到授权密钥文件</b>\n\n文件路径: <code>/root/.ssh/authorized_keys</code>\n状态: 不存在",
+          text: html`❌ <b>未找到授权密钥文件</b><br><br>文件路径: <code>/root/.ssh/authorized_keys</code><br>状态: 不存在`
         });
         return;
       }
@@ -784,7 +784,7 @@ class SSHPlugin extends Plugin {
       
       if (!keysContent) {
         await msg.edit({
-          text: "📋 <b>授权密钥为空</b>\n\n当前没有任何授权密钥可导出",
+          text: html`📋 <b>授权密钥为空</b><br><br>当前没有任何授权密钥可导出`
         });
         return;
       }
@@ -1173,7 +1173,7 @@ ${keysContent}`;
 
     if (!validatePassword(password)) {
       await msg.edit({
-        text: "❌ <b>密码不符合要求</b>\n\n• 密码长度至少8位\n• 建议包含数字、字母、特殊字符",
+        text: html`❌ <b>密码不符合要求</b><br><br>• 密码长度至少8位<br>• 建议包含数字、字母、特殊字符`
       });
       return;
     }
