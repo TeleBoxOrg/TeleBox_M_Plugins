@@ -10,7 +10,7 @@ import axios from "axios";
 import { JSONFilePreset } from "lowdb/node";
 import { createDirectoryInAssets } from "@utils/pathHelpers";
 
-import { exec } from "child_process";
+import { exec, execFile } from "child_process";
 import { promisify } from "util";
 import { safeGetReplyMessage } from "@utils/safeGetMessages";
 import { logger } from "@utils/logger";
@@ -23,6 +23,7 @@ const pluginName = "openlist";
 const commandName = `${mainPrefix}${pluginName}`;
 
 const execAsync = promisify(exec);
+const execFileAsync = promisify(execFile);
 const GH_BASE_DOWNLOAD = "https://github.com/OpenListTeam/OpenList/releases/latest/download";
 
 const codeTag = (text: unknown): string => `<code>${htmlEscape(text)}</code>`;
@@ -185,8 +186,13 @@ class OpenListPlugin extends Plugin {
         return;
       }
 
-      let installBase = dirArg && dirArg.trim() ? dirArg.trim() : "/opt/openlist";
-      const installPath = this.normalizeInstallPath(installBase);
+      const rawBase = dirArg && dirArg.trim() ? dirArg.trim() : "/opt/openlist";
+      const safeBase = this.validatePathInput(rawBase);
+      if (!safeBase) {
+        await msg.edit({ text: `❌ 非法的安装路径: ${htmlEscape(rawBase)}（仅允许绝对路径，且不含 '..' 或 shell 特殊字符）` });
+        return;
+      }
+      const installPath = this.normalizeInstallPath(safeBase);
 
       if (await this.fileExists(`${installPath}/openlist`)) {
         await msg.edit({ text: `检测到已安装于：${codeTag(installPath)}\n请使用：${codeTag(`${commandName} update`)}` });
@@ -220,16 +226,18 @@ class OpenListPlugin extends Plugin {
         "",
       ].join("\n");
 
-      await execAsync(
-        `bash -lc 'cat > /etc/systemd/system/openlist.service <<\"EOF\"\n${serviceContent}\nEOF'`
-      );
-      await execAsync(`systemctl daemon-reload`);
-      await execAsync(`systemctl enable openlist`);
-      await execAsync(`systemctl restart openlist`);
+      await fs.writeFile("/etc/systemd/system/openlist.service", serviceContent);
+      await execFileAsync("systemctl", ["daemon-reload"]);
+      await execFileAsync("systemctl", ["enable", "openlist"]);
+      await execFileAsync("systemctl", ["restart", "openlist"]);
 
-      const { stdout: randOut } = await execAsync(
-        `bash -lc 'cd "${installPath}" && ./openlist admin random 2>&1 || true'`
-      );
+      let randOut = "";
+      try {
+        const r = await execFileAsync(`${installPath}/openlist`, ["admin", "random"], { cwd: installPath, shell: false });
+        randOut = r.stdout || "";
+      } catch (e: unknown) {
+        logger.warn("[openlist] admin random 输出解析失败:", e);
+      }
       const userMatch = randOut.match(/username:\s*(\S+)/i);
       const passMatch = randOut.match(/password:\s*(\S+)/i);
       const username = userMatch ? userMatch[1] : "";
@@ -318,9 +326,13 @@ class OpenListPlugin extends Plugin {
       await execAsync(`chmod +x "${installPath}/openlist"`);
       await execAsync(`systemctl restart openlist`);
 
-      const { stdout: verOut } = await execAsync(
-        `bash -lc '"${installPath}/openlist" version 2>&1 || true'`
-      );
+      let verOut = "";
+      try {
+        const v = await execFileAsync(`${installPath}/openlist`, ["version"], { cwd: installPath, shell: false });
+        verOut = v.stdout || "";
+      } catch (e: unknown) {
+        logger.warn("[openlist] update version 解析失败:", e);
+      }
       const verMatch = verOut.match(/Version:\s*([^\s]+)/);
       const version = verMatch ? verMatch[1] : "";
       await msg.edit({ text: `更新完成${version ? `，版本: ${version}` : ""}` });
@@ -380,7 +392,12 @@ class OpenListPlugin extends Plugin {
       let targetBackupDir = "";
 
       if (backupName) {
-        targetBackupDir = `${backupBaseDir}/${backupName}`;
+        const safeName = this.validateBackupName(backupName);
+        if (!safeName) {
+          await msg.edit({ text: `❌ 非法的备份名称: ${htmlEscape(backupName)}` });
+          return;
+        }
+        targetBackupDir = `${backupBaseDir}/${safeName}`;
       } else {
         const { stdout: latestOut } = await execAsync(
           `bash -lc 'ls -t "${backupBaseDir}" 2>/dev/null | head -n1'`
@@ -451,9 +468,11 @@ class OpenListPlugin extends Plugin {
       }
 
       await msg.edit({ text: `正在执行: ${cmd}` });
-      const { stdout } = await execAsync(
-        `bash -lc 'cd "${installPath}" && ./openlist ${cmd} 2>&1'`
-      );
+      const argv: string[] =
+        sub === "random"
+          ? ["admin", "random"]
+          : [sub === "setpass" ? "set" : "setuser", arg];
+      const { stdout } = await execFileAsync(`${installPath}/openlist`, argv, { cwd: installPath, shell: false });
 
       // 如果是 random，解析输出
       if (sub === "random") {
@@ -813,6 +832,23 @@ class OpenListPlugin extends Plugin {
     let p = input.replace(/\/+$/, "");
     if (!p.endsWith("/openlist")) p = `${p}/openlist`;
     return p;
+  }
+
+  // 仅允许绝对路径，且不含 '..' 或任何 shell 元字符（防命令注入）
+  private validatePathInput(input: string): string | null {
+    const trimmed = input.trim();
+    if (!trimmed.startsWith("/")) return null;
+    if (trimmed.includes("..")) return null;
+    if (!/^\/[A-Za-z0-9._/-]+$/.test(trimmed)) return null;
+    return trimmed.replace(/\/+$/, "");
+  }
+
+  // 仅允许备份名由字母数字. _ - 组成（无斜杠、无 shell 元字符）
+  private validateBackupName(input: string): string | null {
+    const trimmed = input.trim();
+    if (!trimmed) return null;
+    if (!/^[A-Za-z0-9._-]+$/.test(trimmed)) return null;
+    return trimmed;
   }
 
   private async detectInstalledPath(): Promise<string> {
