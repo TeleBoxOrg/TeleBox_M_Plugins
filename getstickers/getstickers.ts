@@ -5,7 +5,7 @@ import * as fs from "fs";
 import * as path from "path";
 import { promisify } from "util";
 import archiver from "archiver";
-import { exec } from "child_process";
+import { execFile } from "child_process";
 import { getPrefixes } from "@utils/pluginManager";
 import { safeGetReplyMessage } from "@utils/safeGetMessages";
 import { logger } from "@utils/logger";
@@ -57,7 +57,7 @@ const prefixes = getPrefixes();
 const mainPrefix = prefixes[0];
 
 
-const execAsync = promisify(exec);
+const execFileAsync = promisify(execFile);
 
 
 class GetStickersPlugin extends Plugin {
@@ -581,7 +581,7 @@ class GetStickersPlugin extends Plugin {
     const result = { ffmpeg: false, lottie: false };
     
     try {
-      await execAsync('ffmpeg -version');
+      await execFileAsync('ffmpeg', ['-version']);
       result.ffmpeg = true;
       logger.info('FFmpeg 已安装');
     } catch (e: unknown) {
@@ -589,7 +589,7 @@ class GetStickersPlugin extends Plugin {
     }
     
     try {
-      await execAsync('pip show lottie');
+      await execFileAsync('pip', ['show', 'lottie']);
       result.lottie = true;
       logger.info('lottie 已安装');
     } catch (e: unknown) {
@@ -600,8 +600,12 @@ class GetStickersPlugin extends Plugin {
   }
   
   private async convertWebpToGif(webpPath: string, gifPath: string): Promise<void> {
-    const ffmpegCmd = `ffmpeg -i "${webpPath}" -vf "scale=512:512:force_original_aspect_ratio=decrease,pad=512:512:(ow-iw)/2:(oh-ih)/2:color=white@0" -loop 0 "${gifPath}"`;
-    await execAsync(ffmpegCmd);
+    await execFileAsync('ffmpeg', [
+      '-i', webpPath,
+      '-vf', 'scale=512:512:force_original_aspect_ratio=decrease,pad=512:512:(ow-iw)/2:(oh-ih)/2:color=white@0',
+      '-loop', '0',
+      gifPath
+    ]);
   }
   
   private async convertTgsToGif(tgsPath: string, gifPath: string): Promise<void> {
@@ -626,8 +630,7 @@ export_gif(animation, gif_path, 512, 512, 30)
     fs.writeFileSync(scriptPath, pythonScript);
     
     try {
-      const pythonCmd = `python "${scriptPath}" "${tgsPath}" "${gifPath}"`;
-      await execAsync(pythonCmd, { timeout: 60000 });
+      await execFileAsync('python', [scriptPath, tgsPath, gifPath], { timeout: 60000 });
     } finally {
       if (fs.existsSync(scriptPath)) {
         fs.unlinkSync(scriptPath);
@@ -636,8 +639,11 @@ export_gif(animation, gif_path, 512, 512, 30)
   }
   
   private async convertMp4ToGif(mp4Path: string, gifPath: string): Promise<void> {
-    const ffmpegCmd = `ffmpeg -i "${mp4Path}" -vf "fps=15,scale=512:512:force_original_aspect_ratio=decrease,pad=512:512:(ow-iw)/2:(oh-ih)/2:color=white@0" "${gifPath}"`;
-    await execAsync(ffmpegCmd);
+    await execFileAsync('ffmpeg', [
+      '-i', mp4Path,
+      '-vf', 'fps=15,scale=512:512:force_original_aspect_ratio=decrease,pad=512:512:(ow-iw)/2:(oh-ih)/2:color=white@0',
+      gifPath
+    ]);
   }
   
   private async createZipFile(sourceDir: string, zipPath: string): Promise<void> {
