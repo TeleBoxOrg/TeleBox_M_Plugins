@@ -1,6 +1,6 @@
 import { Plugin } from "@utils/pluginBase";
 import { getPrefixes } from "@utils/pluginManager";
-import { getGlobalClient, type GenerationContext } from "@utils/globalClient";
+import { getGlobalClient, type GenerationContext } from "@utils/runtimeManager";
 import type { MessageContext } from "@mtcute/dispatcher";
 import { html } from "@mtcute/html-parser";
 import { createDirectoryInAssets } from "@utils/pathHelpers";

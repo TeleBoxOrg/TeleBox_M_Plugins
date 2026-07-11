@@ -9,7 +9,7 @@ import type { MessageContext } from "@mtcute/dispatcher";
 import type { Message, MessageEntity, MessageMedia, Photo, Sticker, Video, Audio, Document, RawDocument } from "@mtcute/core";
 import type { TelegramClient } from "@mtcute/node";
 import { html } from "@mtcute/html-parser";
-import { getGlobalClient } from "@utils/globalClient";
+import { getGlobalClient } from "@utils/runtimeManager";
 import { promisify } from 'util';
 import { safeGetReplyMessage } from "@utils/safeGetMessages";
 import { logger } from "@utils/logger";

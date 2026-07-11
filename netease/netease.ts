@@ -2,7 +2,7 @@ import { Plugin } from "@utils/pluginBase";
 import type { MessageContext } from "@mtcute/dispatcher";
 import { html } from "@mtcute/html-parser";
 import { getPrefixes } from "@utils/pluginManager";
-import { getGlobalClient } from "@utils/globalClient";
+import { getGlobalClient } from "@utils/runtimeManager";
 import { Message } from "@mtcute/node";
 import { logger } from "@utils/logger";
 import { sleep } from "@utils/asyncHelpers";

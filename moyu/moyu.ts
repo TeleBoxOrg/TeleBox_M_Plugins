@@ -1,7 +1,7 @@
 import { Plugin } from "@utils/pluginBase";
 import type { MessageContext } from "@mtcute/dispatcher";
 import axios from "axios";
-import { getGlobalClient } from "@utils/globalClient";
+import { getGlobalClient } from "@utils/runtimeManager";
 
 const url = "https://api.52vmy.cn/api/wl/moyu";
 

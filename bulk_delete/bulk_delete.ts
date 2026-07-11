@@ -5,7 +5,7 @@ import { createDirectoryInAssets } from "@utils/pathHelpers";
 import { JSONFilePreset } from "lowdb/node";
 import path from "path";
 import { safeGetMessages } from "@utils/safeGetMessages";
-import { getGlobalClient } from "@utils/globalClient";
+import { getGlobalClient } from "@utils/runtimeManager";
 
 import { safeGetMe } from "@utils/authGuards";
 import { logger } from "@utils/logger";

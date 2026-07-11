@@ -2,7 +2,7 @@ import { Plugin } from "@utils/pluginBase";
 import type { MessageContext } from "@mtcute/dispatcher";
 import { html } from "@mtcute/html-parser";
 import { getPrefixes } from "@utils/pluginManager";
-import { getGlobalClient } from "@utils/globalClient";
+import { getGlobalClient } from "@utils/runtimeManager";
 import { safeGetMe } from "@utils/authGuards";
 import { logger } from "@utils/logger";
 import { getErrorMessage } from "@utils/errorHelpers";

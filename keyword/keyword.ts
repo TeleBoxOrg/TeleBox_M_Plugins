@@ -1,5 +1,5 @@
 import { Plugin } from "@utils/pluginBase";
-import { getGlobalClient } from "@utils/globalClient";
+import { getGlobalClient } from "@utils/runtimeManager";
 import { createDirectoryInAssets } from "@utils/pathHelpers";
 import { logger } from "@utils/logger";
 import { getErrorMessage } from "@utils/errorHelpers";

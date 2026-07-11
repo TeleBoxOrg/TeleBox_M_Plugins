@@ -5,7 +5,7 @@ import { Plugin } from "@utils/pluginBase";
 import type { MessageContext } from "@mtcute/dispatcher";
 import type { MtcuteFileLocation } from "@utils/mtcuteTypes";
 import { html } from "@mtcute/html-parser";
-import { getGlobalClient, tryGetCurrentGenerationContext } from "@utils/globalClient";
+import { getGlobalClient, tryGetCurrentGenerationContext } from "@utils/runtimeManager";
 import { Buffer } from "buffer";
 import { safeGetReplyMessage } from "@utils/safeGetMessages";
 import { getErrorMessage } from "@utils/errorHelpers";

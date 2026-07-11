@@ -3,7 +3,7 @@ import { Plugin } from "@utils/pluginBase";
 import type { TelegramClient } from "@mtcute/node";
 import type { MessageContext } from "@mtcute/dispatcher";
 import { html } from "@mtcute/html-parser";
-import { getGlobalClient } from "@utils/globalClient";
+import { getGlobalClient } from "@utils/runtimeManager";
 import * as path from "path";
 import * as fs from "fs";
 import { Low } from "lowdb";

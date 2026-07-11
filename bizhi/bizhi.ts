@@ -22,7 +22,7 @@ import { getErrorMessage } from "@utils/errorHelpers";
 import { getPrefixes } from "@utils/pluginManager";
 import { Plugin } from "@utils/pluginBase";
 import type { MessageContext } from "@mtcute/dispatcher";
-import { getGlobalClient } from "@utils/globalClient";
+import { getGlobalClient } from "@utils/runtimeManager";
 
 // wallhaven API 接口类型
 interface WallhavenResponse {

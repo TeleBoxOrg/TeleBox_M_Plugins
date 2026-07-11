@@ -3,7 +3,7 @@ import type { TelegramClient } from "@mtcute/node";
 import type { MessageContext } from "@mtcute/dispatcher";
 import type { MtcuteInputChannel, MtcuteInputPeer, MtcuteLong } from "@utils/mtcuteTypes";
 import { html } from "@mtcute/html-parser";
-import { getGlobalClient } from "@utils/globalClient";
+import { getGlobalClient } from "@utils/runtimeManager";
 import { getPrefixes } from "@utils/pluginManager";
 import { createDirectoryInAssets } from "@utils/pathHelpers";
 import * as fs from "fs";

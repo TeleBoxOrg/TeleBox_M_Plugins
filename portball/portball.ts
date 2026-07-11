@@ -3,7 +3,7 @@ import { getPrefixes } from "@utils/pluginManager";
 import type { MessageContext } from "@mtcute/dispatcher";
 import type { MtcuteInputChannel, MtcuteInputPeer } from "@utils/mtcuteTypes";
 import { html } from "@mtcute/html-parser";
-import { getGlobalClient } from "@utils/globalClient";
+import { getGlobalClient } from "@utils/runtimeManager";
 import { safeGetReplyMessage } from "@utils/safeGetMessages";
 
 import { safeGetMe } from "@utils/authGuards";

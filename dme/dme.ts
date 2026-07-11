@@ -9,7 +9,7 @@ import { TelegramClient } from "@mtcute/node";
 import type { MessageContext } from "@mtcute/dispatcher";
 import type { MtcuteInputMediaLike } from "@utils/mtcuteTypes";
 import { html } from "@mtcute/html-parser";
-import { getGlobalClient } from "@utils/globalClient";
+import { getGlobalClient } from "@utils/runtimeManager";
 import { getEntityWithHash } from "@utils/entityHelpers";
 import { Plugin } from "@utils/pluginBase";
 import * as fs from "fs";

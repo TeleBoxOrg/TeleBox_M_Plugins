@@ -3,7 +3,7 @@ import { getPrefixes } from "@utils/pluginManager";
 import type { MessageContext } from "@mtcute/dispatcher";
 import type { InputPeerLike } from "@mtcute/core";
 import { html } from "@mtcute/html-parser";
-import { getGlobalClient } from "@utils/globalClient";
+import { getGlobalClient } from "@utils/runtimeManager";
 import { logger } from "@utils/logger";
 import { getErrorMessage } from "@utils/errorHelpers";
 import { htmlEscape } from "@utils/htmlEscape";

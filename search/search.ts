@@ -4,7 +4,7 @@ import type { Message, Video, Document, Chat, User, TelegramClient } from "@mtcu
 import { tl } from "@mtcute/node";
 import { Long } from "@mtcute/core";
 import type { MtcuteFileLocation, MtcuteInputChannel } from "@utils/mtcuteTypes";
-import { getGlobalClient } from "@utils/globalClient";
+import { getGlobalClient } from "@utils/runtimeManager";
 import { getPrefixes } from "@utils/pluginManager";
 import fs from "fs/promises";
 import path from "path";

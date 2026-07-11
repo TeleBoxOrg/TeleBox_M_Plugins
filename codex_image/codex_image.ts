@@ -8,7 +8,7 @@ import { getPrefixes } from "@utils/pluginManager";
 import { createDirectoryInAssets } from "@utils/pathHelpers";
 import type { MessageContext } from "@mtcute/dispatcher";
 import { html } from "@mtcute/html-parser";
-import { getGlobalClient } from "@utils/globalClient";
+import { getGlobalClient } from "@utils/runtimeManager";
 import { safeGetReplyMessage } from "@utils/safeGetMessages";
 import { logger } from "@utils/logger";
 import { getErrorMessage } from "@utils/errorHelpers";

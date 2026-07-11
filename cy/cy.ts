@@ -1,6 +1,6 @@
 import { Plugin } from "@utils/pluginBase";
 import { getPrefixes } from "@utils/pluginManager";
-import { getGlobalClient } from "@utils/globalClient";
+import { getGlobalClient } from "@utils/runtimeManager";
 import { createCanvas, registerFont } from "canvas";
 import fs from "fs";
 import path from "path";

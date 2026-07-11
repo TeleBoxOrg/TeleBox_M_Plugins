@@ -1,5 +1,5 @@
 import type { MessageContext } from "@mtcute/dispatcher";
-import { getGlobalClient } from "@utils/globalClient";
+import { getGlobalClient } from "@utils/runtimeManager";
 import { Plugin } from "@utils/pluginBase";
 import { getPrefixes } from "@utils/pluginManager";
 import { execFile } from "child_process";

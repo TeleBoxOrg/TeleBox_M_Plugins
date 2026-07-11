@@ -6,7 +6,7 @@ import { Plugin } from "@utils/pluginBase";
 import { getPrefixes } from "@utils/pluginManager";
 import { createDirectoryInAssets } from "@utils/pathHelpers";
 import { safeGetReplyMessage } from "@utils/safeGetMessages";
-import { getGlobalClient } from "@utils/globalClient";
+import { getGlobalClient } from "@utils/runtimeManager";
 import { getErrorMessage } from "@utils/errorHelpers";
 import type { MtcuteFileLocation } from "@utils/mtcuteTypes";
 import { html } from "@mtcute/html-parser";

@@ -3,7 +3,7 @@ import { getPrefixes } from "@utils/pluginManager";
 import type { MessageContext } from "@mtcute/dispatcher";
 import type { MtcuteFileDownloadLocation, MtcuteMessageContext } from "@utils/mtcuteTypes";
 import { html } from "@mtcute/html-parser";
-import { getGlobalClient } from "@utils/globalClient";
+import { getGlobalClient } from "@utils/runtimeManager";
 import { createDirectoryInAssets, createDirectoryInTemp } from "@utils/pathHelpers";
 import { JSONFilePreset } from "lowdb/node";
 import * as path from "path";

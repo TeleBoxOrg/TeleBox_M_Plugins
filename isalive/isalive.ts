@@ -1,6 +1,6 @@
 import { getPrefixes } from "@utils/pluginManager";
 import { Plugin } from "@utils/pluginBase";
-import { getGlobalClient } from "@utils/globalClient";
+import { getGlobalClient } from "@utils/runtimeManager";
 import type { MessageContext } from "@mtcute/dispatcher";
 import type { User, Chat } from "@mtcute/node";
 import type { MtcuteLong } from "@utils/mtcuteTypes";

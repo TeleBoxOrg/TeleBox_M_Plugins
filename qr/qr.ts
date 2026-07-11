@@ -1,5 +1,5 @@
 import { Plugin } from "@utils/pluginBase";
-import { getGlobalClient } from "@utils/globalClient";
+import { getGlobalClient } from "@utils/runtimeManager";
 import { Buffer } from "buffer";
 import { execFile } from "child_process";
 import { promisify } from "util";

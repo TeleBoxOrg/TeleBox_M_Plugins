@@ -1,7 +1,7 @@
 import { Plugin } from "@utils/pluginBase";
 import { getPrefixes } from "@utils/pluginManager";
 import type { MessageContext } from "@mtcute/dispatcher";
-import { getGlobalClient } from "@utils/globalClient";
+import { getGlobalClient } from "@utils/runtimeManager";
 import * as fs from "fs/promises";
 import axios from "axios";
 import { execFile } from "child_process";

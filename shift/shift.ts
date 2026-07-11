@@ -5,7 +5,7 @@ import { createDirectoryInAssets } from "@utils/pathHelpers";
 import {
   getGlobalClient,
   tryGetCurrentGenerationContext,
-} from "@utils/globalClient";
+} from "@utils/runtimeManager";
 import { html } from "@mtcute/html-parser";
 import { TelegramClient } from "@mtcute/node";
 import type { Chat, Peer } from "@mtcute/core";

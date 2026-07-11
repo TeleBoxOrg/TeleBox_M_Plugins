@@ -7,7 +7,7 @@ import type { tl } from "@mtcute/core";
 import type { MtcuteInputUser } from "@utils/mtcuteTypes";
 import { getPrefixes } from "@utils/pluginManager";
 import { safeGetReplyMessage } from "@utils/safeGetMessages";
-import { getGlobalClient } from "@utils/globalClient";
+import { getGlobalClient } from "@utils/runtimeManager";
 import { logger } from "@utils/logger";
 import type { UsersGetFullUserResult } from "@utils/clientInternals";
 

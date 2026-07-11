@@ -1,7 +1,7 @@
 import { Plugin } from "@utils/pluginBase";
 import { sleep } from "@utils/asyncHelpers";
 import { htmlEscape } from "@utils/htmlEscape";
-import { getGlobalClient } from "@utils/globalClient";
+import { getGlobalClient } from "@utils/runtimeManager";
 import { getPrefixes } from "@utils/pluginManager";
 import { logger } from "@utils/logger";
 import { getErrorMessage } from "@utils/errorHelpers";

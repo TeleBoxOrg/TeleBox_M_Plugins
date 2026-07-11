@@ -1,7 +1,7 @@
 import { Plugin, type PluginRuntimeContext } from "@utils/pluginBase";
 import type { MessageContext } from "@mtcute/dispatcher";
 import type { Message } from "@mtcute/core";
-import { getGlobalClient } from "@utils/globalClient";
+import { getGlobalClient } from "@utils/runtimeManager";
 import { html } from "@mtcute/html-parser";
 import { getPrefixes } from "@utils/pluginManager";
 import { JSONFilePreset } from "lowdb/node";

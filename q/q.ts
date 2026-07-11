@@ -4,7 +4,7 @@ import { conversation } from "@utils/conversation";
 import type { MessageContext } from "@mtcute/dispatcher";
 import type { Message } from "@mtcute/node";
 import { safeGetReplyMessage } from "@utils/safeGetMessages";
-import { getGlobalClient } from "@utils/globalClient";
+import { getGlobalClient } from "@utils/runtimeManager";
 
 const prefixes = getPrefixes();
 const mainPrefix = prefixes[0];

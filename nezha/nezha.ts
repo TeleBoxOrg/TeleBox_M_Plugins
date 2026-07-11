@@ -1,7 +1,7 @@
 import { Plugin } from "@utils/pluginBase";
 import type { MessageContext } from "@mtcute/dispatcher";
 import { html } from "@mtcute/html-parser";
-import { getGlobalClient } from "@utils/globalClient";
+import { getGlobalClient } from "@utils/runtimeManager";
 import axios from "axios";
 import * as crypto from "crypto";
 import * as fs from "fs";

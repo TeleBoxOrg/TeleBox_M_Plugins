@@ -3,7 +3,7 @@ import type { MessageContext } from "@mtcute/dispatcher";
 import type { MtcuteFileLocation } from "@utils/mtcuteTypes";
 import { html } from "@mtcute/html-parser";
 import { getPrefixes } from "@utils/pluginManager";
-import { getGlobalClient } from "@utils/globalClient";
+import { getGlobalClient } from "@utils/runtimeManager";
 import axios from "axios";
 import { safeGetReplyMessage } from "@utils/safeGetMessages";
 import { logger } from "@utils/logger";

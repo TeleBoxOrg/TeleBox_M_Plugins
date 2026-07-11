@@ -1,6 +1,6 @@
 import { Plugin } from "@utils/pluginBase";
 import { getPrefixes } from "@utils/pluginManager";
-import { getGlobalClient } from "@utils/globalClient";
+import { getGlobalClient } from "@utils/runtimeManager";
 import type { MessageContext } from "@mtcute/dispatcher";
 import { html } from "@mtcute/html-parser";
 import { logger } from "@utils/logger";

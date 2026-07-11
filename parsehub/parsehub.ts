@@ -6,7 +6,7 @@ import * as fs from "fs";
 import { safeGetMessages, safeGetReplyMessage } from "@utils/safeGetMessages";
 import type { MessageContext } from "@mtcute/dispatcher";
 import { html } from "@mtcute/html-parser";
-import { getGlobalClient } from "@utils/globalClient";
+import { getGlobalClient } from "@utils/runtimeManager";
 import { tl, Long } from "@mtcute/node";
 import { Message } from "@mtcute/core";
 import { TelegramClient } from "@mtcute/core/highlevel/client.js";

@@ -1,7 +1,7 @@
 import { Plugin } from "@utils/pluginBase";
-import { getCurrentGenerationContext } from "@utils/globalClient";
+import { getCurrentGenerationContext } from "@utils/runtimeManager";
 import { getPrefixes } from "@utils/pluginManager";
-import { getGlobalClient } from "@utils/globalClient";
+import { getGlobalClient } from "@utils/runtimeManager";
 import { createDirectoryInAssets } from "@utils/pathHelpers";
 import type { TelegramClient } from "@mtcute/node";
 import type { ClientInternals } from "@utils/clientInternals";

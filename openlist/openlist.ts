@@ -3,7 +3,7 @@ import { getPrefixes } from "@utils/pluginManager";
 import type { MessageContext } from "@mtcute/dispatcher";
 import type { MtcuteFileDownloadLocation } from "@utils/mtcuteTypes";
 import { html } from "@mtcute/html-parser";
-import { getGlobalClient } from "@utils/globalClient";
+import { getGlobalClient } from "@utils/runtimeManager";
 import * as fs from "fs/promises";
 import * as path from "path";
 import axios from "axios";

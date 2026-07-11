@@ -2,7 +2,7 @@
 import { Plugin } from "@utils/pluginBase";
 import type { MessageContext } from "@mtcute/dispatcher";
 import { html } from "@mtcute/html-parser";
-import { getGlobalClient, tryGetCurrentGenerationContext } from "@utils/globalClient";
+import { getGlobalClient, tryGetCurrentGenerationContext } from "@utils/runtimeManager";
 import { getPrefixes } from "@utils/pluginManager";
 import { createDirectoryInAssets } from "@utils/pathHelpers";
 import path from "path";

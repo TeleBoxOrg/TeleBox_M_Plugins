@@ -2,7 +2,7 @@
 import { html } from "@mtcute/html-parser";
 import { Plugin } from "@utils/pluginBase";
 import type { MessageContext } from "@mtcute/dispatcher";
-import { getGlobalClient } from "@utils/globalClient";
+import { getGlobalClient } from "@utils/runtimeManager";
 import { cronManager } from "@utils/cronManager";
 import { JSONFilePreset } from "lowdb/node";
 import { createDirectoryInAssets } from "@utils/pathHelpers";

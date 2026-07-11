@@ -1,5 +1,5 @@
 import { Plugin } from "@utils/pluginBase";
-import { getGlobalClient } from "@utils/globalClient";
+import { getGlobalClient } from "@utils/runtimeManager";
 import type { MessageContext } from "@mtcute/dispatcher";
 import * as fs from "fs";
 import * as path from "path";

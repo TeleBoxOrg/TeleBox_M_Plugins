@@ -1,7 +1,7 @@
 import { TelegramClient, Message } from "@mtcute/node";
 import type { MessageContext } from "@mtcute/dispatcher";
 import type { MtcuteMessageContext } from "@utils/mtcuteTypes";
-import { getGlobalClient } from "@utils/globalClient";
+import { getGlobalClient } from "@utils/runtimeManager";
 import * as fs from "fs";
 import * as path from "path";
 import * as os from "os";
