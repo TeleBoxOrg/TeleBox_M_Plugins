@@ -1,6 +1,6 @@
 // plugins/sendat.ts
 import { html } from "@mtcute/html-parser";
-import { Plugin } from "@utils/pluginBase";
+import { Plugin, type PluginRuntimeContext } from "@utils/pluginBase";
 import type { MessageContext } from "@mtcute/dispatcher";
 import { getGlobalClient } from "@utils/runtimeManager";
 import { cronManager } from "@utils/cronManager";
@@ -223,13 +223,19 @@ class SendTaskManager {
   constructor() {
     const assetsDir = createDirectoryInAssets("sendat");
     this.dbPath = path.join(assetsDir, "tasks.json");
-    this.initDB();
   }
 
-  private async initDB(): Promise<void> {
+  async initDB(): Promise<void> {
     this.db = await JSONFilePreset<{ tasks: SendTaskData[] }>(this.dbPath, { tasks: [] });
     this.tasks = this.db.data.tasks.map((data: SendTaskData) => new SendTask(data));
-    this.registerAllTasks();
+  }
+
+  registerAllTasks(): void {
+    this.tasks.forEach(task => {
+      if (!task.pause) {
+        this.registerTask(task);
+      }
+    });
   }
 
   private async saveToDB(): Promise<void> {
@@ -397,14 +403,6 @@ class SendTaskManager {
     }
   }
 
-  // 注册所有任务
-  private registerAllTasks(): void {
-    this.tasks.forEach(task => {
-      if (!task.pause) {
-        this.registerTask(task);
-      }
-    });
-  }
 }
 
 // 插件主类
@@ -437,6 +435,12 @@ seconds, minutes, hours, date, times`;
   }
 
   get description() { return this.helpText; }
+
+  async setup(context: PluginRuntimeContext): Promise<void> {
+    await this.taskManager.initDB();
+    if (context.signal.aborted) return;
+    this.taskManager.registerAllTasks();
+  }
 
   cleanup(): void {
     // Remove all cron tasks registered by this plugin to prevent zombies on reload
