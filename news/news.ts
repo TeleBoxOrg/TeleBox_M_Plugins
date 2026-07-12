@@ -113,20 +113,20 @@ class NewsPlugin extends Plugin {
         // 明确请求帮助时才显示
         if (sub === "help" || sub === "h") {
           await msg.edit({
-            text: help_text
+            text: html(help_text)
           });
           return;
         }
 
         // 未知子命令
         await msg.edit({
-          text: `❌ <b>未知命令:</b> <code>${htmlEscape(sub)}</code>`
+          text: html(`❌ <b>未知命令:</b> <code>${htmlEscape(sub)}</code>`)
         });
 
       } catch (error: unknown) {
         logger.error("[news] 插件执行失败:", error);
         await msg.edit({
-          text: `❌ <b>插件执行失败:</b> ${htmlEscape(getErrorMessage(error))}`
+          text: html(`❌ <b>插件执行失败:</b> ${htmlEscape(getErrorMessage(error))}`)
         });
       }
     }
@@ -236,7 +236,7 @@ class NewsPlugin extends Plugin {
       const MAX_LENGTH = 4000;
       if (finalMessage.length <= MAX_LENGTH) {
         await msg.edit({
-          text: finalMessage || "❌ 未获取到有效数据"
+          text: html(finalMessage || "❌ 未获取到有效数据")
         });
       } else {
         // 分段发送
@@ -264,7 +264,7 @@ class NewsPlugin extends Plugin {
         // 发送第一段（编辑原消息）
         if (chunks.length > 0) {
           await msg.edit({
-            text: chunks[0]
+            text: html(chunks[0])
           });
           
           // 发送后续段落
@@ -281,7 +281,7 @@ class NewsPlugin extends Plugin {
     } catch (error: unknown) {
       logger.error("[news] 获取新闻失败:", error);
       await msg.edit({
-        text: `❌ <b>获取失败:</b> ${htmlEscape(getErrorMessage(error) || "网络请求失败")}`
+        text: html(`❌ <b>获取失败:</b> ${htmlEscape(getErrorMessage(error) || "网络请求失败")}`)
       });
     }
   }
