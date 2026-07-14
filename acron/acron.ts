@@ -177,13 +177,18 @@ async function formatEntity(
   const displayParts: string[] = [];
 
   if (entity) {
-    if ('title' in entity && entity.title) displayParts.push(entity.title);
-    if ('firstName' in entity && entity.firstName) displayParts.push(entity.firstName);
-    if ('lastName' in entity && entity.lastName) displayParts.push(entity.lastName);
-    if ('username' in entity && entity.username)
+    if ("title" in entity && entity.title)
+      displayParts.push(htmlEscape(String(entity.title)));
+    if ("firstName" in entity && entity.firstName)
+      displayParts.push(htmlEscape(String(entity.firstName)));
+    if ("lastName" in entity && entity.lastName)
+      displayParts.push(htmlEscape(String(entity.lastName)));
+    if ("username" in entity && entity.username) {
+      const uname = htmlEscape(String(entity.username));
       displayParts.push(
-        mention ? `@${entity.username}` : `<code>@${entity.username}</code>`,
+        mention ? `@${uname}` : `<code>@${uname}</code>`,
       );
+    }
   }
 
   if (id && entity) {
@@ -192,8 +197,8 @@ async function formatEntity(
         ? `<a href="tg://user?id=${id}">${id}</a>`
         : `<a href="https://t.me/c/${id}">${id}</a>`,
     );
-  } else if (!(target && typeof target === 'object' && '_' in target)) {
-    displayParts.push(`<code>${target}</code>`);
+  } else if (!(target && typeof target === "object" && "_" in target)) {
+    displayParts.push(`<code>${htmlEscape(String(target))}</code>`);
   }
 
   return {
@@ -671,14 +676,14 @@ class AcronPlugin extends Plugin {
                 t.type,
               )}</code>${escapedRemark ? ` • ${escapedRemark}` : ""}`;
               lines.push(title);
-              const chatDisplay = entityInfo?.entity ? entityInfo?.display : t.display;
-              lines.push(
-                `对话: ${
-                  chatDisplay
-                    ? (typeof chatDisplay === 'string' ? htmlEscape(chatDisplay) : chatDisplay)
-                    : `<code>${htmlEscape(t.chat)}</code>`
-                }`,
-              );
+              // entityInfo.display 已是安全 HTML（formatEntity 内已 escape 纯文本）
+              // 勿再 htmlEscape，否则 <code>/<a> 会原样显示
+              const chatDisplay = entityInfo?.entity
+                ? entityInfo.display
+                : t.display
+                  ? htmlEscape(String(t.display))
+                  : `<code>${htmlEscape(String(t.chat))}</code>`;
+              lines.push(`对话: ${chatDisplay}`);
               const msgId = (t.type === "del" || t.type === "pin" || t.type === "unpin")
                 ? (t as DelTask | PinTask | UnpinTask).msgId : undefined;
               const fromChatId = (t.type === "copy" || t.type === "forward")
@@ -727,9 +732,9 @@ class AcronPlugin extends Plugin {
                   `上次: ${formatDate(new Date(Number(t.lastRunAt)))}`,
                 );
               }
-              if (t.lastResult) lines.push(`结果: ${t.lastResult}`);
-              if (t.lastError) lines.push(`错误: ${t.lastError}`);
-              lines.push(`复制: ${buildCopyCommand(t)}`);
+              if (t.lastResult) lines.push(`结果: ${htmlEscape(String(t.lastResult))}`);
+              if (t.lastError) lines.push(`错误: ${htmlEscape(String(t.lastError))}`);
+              lines.push(`复制: <code>${htmlEscape(buildCopyCommand(t))}</code>`);
               lines.push("");
             }
           }
@@ -748,22 +753,21 @@ class AcronPlugin extends Plugin {
                 t.type,
               )}</code>${escapedRemark ? ` • ${escapedRemark}` : ""}`;
               lines.push(title);
-              const disabledChatDisplay = entityInfo?.entity ? entityInfo?.display : t.display;
-              lines.push(
-                `对话: ${
-                  (typeof disabledChatDisplay === 'string' ? htmlEscape(disabledChatDisplay) : disabledChatDisplay) ||
-                  `<code>${htmlEscape(t.chat)}</code>`
-                }`,
-              );
+              const disabledChatDisplay = entityInfo?.entity
+                ? entityInfo.display
+                : t.display
+                  ? htmlEscape(String(t.display))
+                  : `<code>${htmlEscape(String(t.chat))}</code>`;
+              lines.push(`对话: ${disabledChatDisplay}`);
               // 禁用状态不显示下次执行
               if (t.lastRunAt) {
                 lines.push(
                   `上次: ${formatDate(new Date(Number(t.lastRunAt)))}`,
                 );
               }
-              if (t.lastResult) lines.push(`结果: ${t.lastResult}`);
-              if (t.lastError) lines.push(`错误: ${t.lastError}`);
-              lines.push(`复制: ${buildCopyCommand(t)}`);
+              if (t.lastResult) lines.push(`结果: ${htmlEscape(String(t.lastResult))}`);
+              if (t.lastError) lines.push(`错误: ${htmlEscape(String(t.lastError))}`);
+              lines.push(`复制: <code>${htmlEscape(buildCopyCommand(t))}</code>`);
               lines.push("");
             }
           }
