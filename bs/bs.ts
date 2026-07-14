@@ -106,6 +106,16 @@ function toStrInt(value: any): string | undefined {
   return Number.isFinite(n) ? String(Math.trunc(n)) : undefined;
 }
 
+/** mtcute treats pure-digit strings as usernames; numeric IDs must be numbers. */
+function toPeerId(value: any): any {
+  if (typeof value === "number" || (value && typeof value === "object")) return value;
+  if (typeof value === "string") {
+    const trimmed = value.trim();
+    if (/^-?\d+$/.test(trimmed)) return Number(trimmed);
+  }
+  return value;
+}
+
 async function formatEntity(
   target: any,
   mention?: boolean,
@@ -119,7 +129,7 @@ async function formatEntity(
   try {
     entity = target?.type
       ? target
-      : (await (client as unknown as ClientInternals)?.resolvePeer(target)) as { id?: number; type?: string } | undefined;
+      : (await (client as unknown as ClientInternals)?.resolvePeer(toPeerId(target))) as { id?: number; type?: string } | undefined;
     if (!entity) throw new Error("无法获取 entity");
     id = entity.id;
     if (!id) throw new Error("无法获取 entity id");
@@ -454,7 +464,7 @@ async function forwardToTarget(options: {
   const lookup = getTargetLookup(target);
   let entity: { id?: number; title?: string; firstName?: string; lastName?: string; username?: string; type?: string; bot?: boolean; deleted?: boolean; fake?: boolean; scam?: boolean; botBusiness?: boolean } | undefined;
   try {
-    entity = await (client as unknown as ClientInternals).resolvePeer(lookup as string | number) as { id?: number; title?: string; firstName?: string; lastName?: string; username?: string; type?: string; bot?: boolean; deleted?: boolean; fake?: boolean; scam?: boolean; botBusiness?: boolean } | undefined;
+    entity = await (client as unknown as ClientInternals).resolvePeer(toPeerId(lookup) as string | number) as { id?: number; title?: string; firstName?: string; lastName?: string; username?: string; type?: string; bot?: boolean; deleted?: boolean; fake?: boolean; scam?: boolean; botBusiness?: boolean } | undefined;
   } catch (error: unknown) {
     logger.warn(`[bs] 获取对话 ${target.target} 失败`, error);
     return { success: false, error: getRpcErrorMessage(error) };

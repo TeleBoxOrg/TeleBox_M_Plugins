@@ -46,6 +46,14 @@ interface ShiftStatsRow {
 // Extended client interface for getMessages method not in standard mtcute types
 // (now imported from @utils/clientInternals)
 
+/** mtcute treats pure-digit strings as usernames; numeric IDs must be numbers. */
+function toPeerId(value: Peer | string | number): Peer | string | number {
+  if (typeof value === "number" || (typeof value === "object" && value)) return value;
+  const trimmed = String(value).trim();
+  if (/^-?\d+$/.test(trimmed)) return Number(trimmed);
+  return value;
+}
+
 async function formatEntity(
   target: Peer | string | number,
   mention?: boolean,
@@ -59,7 +67,7 @@ async function formatEntity(
   try {
     entity = typeof target === "object" && target && "className" in target
       ? (target as Peer)
-      : await client?.getChat(target);
+      : await client?.getChat(toPeerId(target) as string | number);
     if (!entity) throw new Error("无法获取 entity");
     id = entity.id;
     if (!id) throw new Error("无法获取 entity id");

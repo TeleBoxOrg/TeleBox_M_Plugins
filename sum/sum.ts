@@ -207,6 +207,15 @@ function parseInterval(interval: string): string | null {
   return null;
 }
 
+
+/** mtcute treats pure-digit strings as usernames; numeric IDs must be numbers. */
+function toPeerId(value: string | number): string | number {
+  if (typeof value === 'number') return value;
+  const trimmed = String(value).trim();
+  if (/^-?\d+$/.test(trimmed)) return Number(trimmed);
+  return value;
+}
+
 function parseChatIdentifier(input: string): string {
   // 1. 如果是纯数字或负数ID，直接返回
   if (/^-?\d+$/.test(input)) {
@@ -286,8 +295,8 @@ async function formatEntity(target: any) {
         throw new Error(`无法处理邀请链接: ${getErrorMessage(inviteError) || "未知错误"}`);
       }
     } else {
-      // 普通的 username 或 ID，直接获取 entity
-      entity = await client.getChat(target);
+      // 普通的 username 或 ID；纯数字字符串需转为 number
+      entity = await client.getChat(toPeerId(target));
       id = entity?.id;
     }
   } catch (e: unknown) {
@@ -514,12 +523,13 @@ async function getGroupMessages(chatId: string, count: number): Promise<MessageD
   const client = await getGlobalClient();
   if (!client) throw new Error("Telegram 客户端未初始化");
 
-  const messages = await client.getHistory(chatId, { limit: count });
+  const peerId = toPeerId(chatId);
+  const messages = await client.getHistory(peerId, { limit: count });
 
   // 获取群组 username（如果有）
   let chatUsername: string | undefined;
   try {
-    const entity = await client.getChat(chatId);
+    const entity = await client.getChat(peerId);
     chatUsername = getUsername(entity) ?? undefined;
   } catch (e: unknown) { logger.warn(`[sum] 忽略错误，使用私有链接格式:`, e) }
 
@@ -564,12 +574,13 @@ async function getGroupMessagesByTime(chatId: string, hours: number): Promise<Me
   const now = Math.floor(Date.now() / 1000);
   const startTime = now - hours * 3600;
 
-  const messages = await client.getHistory(chatId, { limit: 100 });
+  const peerId = toPeerId(chatId);
+  const messages = await client.getHistory(peerId, { limit: 100 });
 
   // 获取群组 username（如果有）
   let chatUsername: string | undefined;
   try {
-    const entity = await client.getChat(chatId);
+    const entity = await client.getChat(peerId);
     chatUsername = getUsername(entity) ?? undefined;
   } catch (e: unknown) { logger.warn(`[sum] 忽略错误，使用私有链接格式:`, e) }
 
@@ -1088,7 +1099,7 @@ class SummaryPlugin extends Plugin {
           let chatDisplay = chatId;
           if (client) {
             try {
-              const chat = await client.getChat(chatId);
+              const chat = await client.getChat(toPeerId(chatId));
               const displayParts: string[] = [];
               const chatTitle = getTitle(chat);
               const chatUsername = getUsername(chat);
@@ -1144,7 +1155,7 @@ class SummaryPlugin extends Plugin {
           if (useReplyMode) {
             // 回复模式：删除原消息，发送新消息（防止运行时间长消息被顶走）
             if (client) {
-              await client.sendText(chatId, needHtmlParse ? html(summaryText) : (summaryText), { replyTo: msg.replyToMessage?.id || undefined });
+              await client.sendText(toPeerId(chatId), needHtmlParse ? html(summaryText) : (summaryText), { replyTo: msg.replyToMessage?.id || undefined });
               await msg.delete({ revoke: true });
             }
           } else {
@@ -1376,7 +1387,7 @@ class SummaryPlugin extends Plugin {
           try {
             const client = await getGlobalClient();
             if (client) {
-              const entity = await client.getChat(task.chatId);
+              const entity = await client.getChat(toPeerId(task.chatId));
               const username = getUsername(entity) ?? undefined;
               chatLink = buildChatLink(task.chatId, username);
             }
