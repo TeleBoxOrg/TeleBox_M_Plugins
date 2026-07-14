@@ -722,9 +722,71 @@ async function prepareQuoteMedia(msg: MessageContext, args: QuoteArgs): Promise<
   mediaType?: string;
   mediaMaxSize?: number;
   mediaCrop?: boolean;
+  mediaDuration?: number;
   voice?: { waveform: number[]; duration?: number };
-  document?: { title?: string; size?: number; name?: string };
-  audio?: { title?: string; performer?: string; duration?: number };
+  document?: { file_name: string; file_size?: number };
+  audio?: { title?: string; performer?: string; duration?: number; thumb?: any };
+}> {
+  const kind = getMediaKind(msg);
+  const waveform = kind === "voice" ? voiceWaveform(msg) : undefined;
+  const voiceAttr = audioAttribute(msg);
+  const duration = Number(voiceAttr?.duration ?? voiceAttr?.voiceDuration ?? 0) || undefined;
+  const videoAttr = getDocumentAttributes(msg).find((a: any) =>
+    (a.className || a.constructor?.name || a._ || "").toString().includes("Video") || a._ === "documentAttributeVideo"
+  );
+  const mediaDuration =
+    kind === "video" || kind === "animation" || kind === "round"
+      ? Number(videoAttr?.duration ?? 0) || undefined
+      : kind === "voice" || kind === "audio"
+        ? duration
+        : undefined;
+
+  const wantsVisual =
+    args.media ||
+    args.img ||
+    kind === "photo" ||
+    kind === "sticker" ||
+    kind === "animation" ||
+    kind === "video" ||
+    kind === "round";
+  const mediaBuffer = await downloadMessageMedia(msg, !!wantsVisual);
+  const mediaCanvas = await mediaBufferToCanvas(mediaBuffer, kind);
+  const isSticker = kind === "sticker";
+
+  let document: { file_name: string; file_size?: number } | undefined;
+  let audio: { title?: string; performer?: string; duration?: number; thumb?: any } | undefined;
+  if (kind === "document") {
+    const doc = (msg as any).document ?? (msg as any).media?.document;
+    const attrs = Array.isArray(doc?.attributes) ? doc.attributes : getDocumentAttributes(msg);
+    const fn = attrs.find(
+      (a: any) =>
+        (a.className || a.constructor?.name || a._ || "").toString().includes("Filename") ||
+        a.fileName ||
+        a.file_name,
+    );
+    const name = String(fn?.fileName || fn?.file_name || "file");
+    document = { file_name: name, file_size: Number(doc?.size ?? 0) || undefined };
+  } else if (kind === "audio") {
+    const title = voiceAttr?.title || voiceAttr?.fileName || voiceAttr?.file_name || "Audio";
+    const performer = voiceAttr?.performer || voiceAttr?.artist;
+    audio = { title, performer, duration };
+  }
+
+  let mediaType = mediaCanvas ? (kind || "photo") : kind;
+  if (mediaType === "animation") mediaType = "gif";
+  if (mediaType === "round") mediaType = "video";
+
+  return {
+    mediaBuffer,
+    mediaCanvas,
+    mediaType,
+    mediaMaxSize: isSticker ? 220 * (args.scale || 2) : undefined,
+    mediaCrop: isSticker ? false : args.crop,
+    mediaDuration,
+    voice: waveform ? { waveform, duration } : undefined,
+    document,
+    audio,
+  };
 }> {
   const kind = getMediaKind(msg);
   const waveform = kind === "voice" ? voiceWaveform(msg) : undefined;
@@ -1375,6 +1437,7 @@ async function toQuoteMessage(msg: MessageContext, args: QuoteArgs): Promise<any
     mediaType: media.mediaType,
     mediaMaxSize: media.mediaMaxSize,
     mediaCrop: media.mediaCrop,
+    mediaDuration: media.mediaDuration,
     voice: media.voice,
     document: media.document,
     audio: media.audio,
@@ -1455,7 +1518,7 @@ async function editProgress(msg: MessageContext, text: string): Promise<void> {
 }
 
 export class QuotePlugin {
-  description = "引用贴纸生成 (本地版)";
+  description = "引用贴纸生成（本地 glass 渲染：语音/文件/音频行、视频角标、stories/image 输出）";
   cmdHandlers = {
     q: async (msg: MessageContext) => this.handleQuote(msg, "q"),
     quote: async (msg: MessageContext) => this.handleQuote(msg, "quote"),
@@ -1488,14 +1551,16 @@ export class QuotePlugin {
 
         const hasAnimated = false;
         const tGenerate = Date.now();
-        const result = await (await getQuoteGen()).generateQuote({
-          messages: quoteMessages,
-          type: "quote",
-          format: "webp",
-          scale: args.scale,
-          backgroundColor: args.backgroundColor,
-          emojiBrand: args.emojiBrand,
-        });
+  const outType = args.stories ? "stories" : args.png ? "image" : "quote";
+  const outFormat = args.png || args.stories ? "png" : "webp";
+  const result = await (await getQuoteGen()).generateQuote({
+    messages: quoteMessages,
+    type: outType,
+    format: outFormat,
+    scale: args.scale,
+    backgroundColor: args.backgroundColor,
+    emojiBrand: args.emojiBrand,
+  });
         quoteTiming("main.generate_result", tGenerate, { ext: result.ext, bytes: result.image?.length || 0, hasAnimated });
 
         const dir = createDirectoryInTemp("telebox_quote");
