@@ -55,7 +55,7 @@ TeleBox-Next-Plugins 是 [TeleBox-Next](https://github.com/TeleBoxOrg/TeleBox-Ne
 - `dig` - DNS 查询  
 - `diss` - 儒雅随和版祖安语录  
 - `dme` - 删除指定数量的自己发送的消息  
-- `duckduckgo` - DuckDuckGo 搜索（TLS 伪装 + Firecrawl 回退）  
+- `duckduckgo` - DuckDuckGo 搜索  
 - `eat` - 生成带头像表情包  
 - `eatgif` - 生成"吃掉"动图表情包  
 - `encode` - 简单的编码解码  
