@@ -428,7 +428,7 @@ class ManageAdminPlugin extends Plugin {
               parts.push(`<a href="tg://user?id=${uid}">${uid}</a>`);
               display = parts.join(" ");
             } else {
-              display = `<a href=\"tg://user?id=${uid}\">${uid}</a>`;
+              display = `<a href="tg://user?id=${uid}">${uid}</a>`;
             }
             lines.push(
               `- ${display}${rank ? ` | 头衔: ${codeTag(rank)}` : ""}`
