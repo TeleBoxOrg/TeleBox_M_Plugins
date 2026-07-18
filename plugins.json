@@ -484,7 +484,7 @@
     "desc": "二次元图片"
   },
   "theme-converter": {
-    "url": "https://github.com/TeleBoxOrg/TeleBox-Next-Plugins/blob/main/theme-converter/theme-converter.ts?raw=true",
+    "url": "https://github.com/TeleBoxOrg/TeleBox-Next-Plugins/blob/main/theme-converter.ts?raw=true",
     "desc": "🎨 Telegram 主题转换器 Android↔Desktop↔TGX"
   }
 }
