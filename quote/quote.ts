@@ -703,21 +703,49 @@ async function getPeerEntity(client: unknown, peer: unknown): Promise<unknown | 
   }
 }
 
+async function ensureFullUser(client: any, entity: any): Promise<any> {
+  if (!client || !entity) return entity;
+  try {
+    const isMin = !!(entity.isMin || entity.raw?.min);
+    const hasStatusField =
+      entity.emojiStatus != null ||
+      entity.emoji_status != null ||
+      entity.raw?.emojiStatus != null ||
+      entity.raw?.emoji_status != null;
+    // min peers omit many fields including emojiStatus; refresh when missing
+    if (!isMin && hasStatusField) return entity;
+    if (entity.type && entity.type !== "user") return entity;
+    if (typeof client.getUsers !== "function") return entity;
+    const users = await withTimeout(
+      client.getUsers(entity),
+      QUOTE_RPC_TIMEOUT_MS,
+      "quote.ensureFullUser.getUsers",
+    );
+    const full = Array.isArray(users) ? users[0] : users;
+    return full || entity;
+  } catch (err: unknown) {
+    logger.debug("quote ensureFullUser failed", getErrorMessage(err));
+    return entity;
+  }
+}
+
 async function senderEntity(msg: MessageContext): Promise<unknown | undefined> {
   const peer = msg.sender?.id;
   const key = peer ? `sender:${stableEntityKey(peer)}` : undefined;
   if (key && entityCache.has(key)) return entityCache.get(key);
+  const client = await getGlobalClient().catch((e) => { logger.warn("[quote] senderEntity: getGlobalClient failed", getErrorMessage(e)); return null; });
   try {
-    const sender = msg.sender;
+    let sender: any = msg.sender;
     if (sender) {
+      sender = await ensureFullUser(client, sender);
       if (key) entityCache.set(key, sender);
       return sender;
     }
   } catch (err: unknown) {
     logger.debug("quote: sender entity from message failed", err);
   }
-  const client = await getGlobalClient().catch((e) => { logger.warn("[quote] senderEntity: getGlobalClient failed", getErrorMessage(e)); return null; });
-  const entity = await getPeerEntity(client, peer);
+  let entity: any = await getPeerEntity(client, peer);
+  entity = await ensureFullUser(client, entity);
   if (key) entityCache.set(key, entity);
   return entity;
 }

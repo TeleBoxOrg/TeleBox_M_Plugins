@@ -2,13 +2,6 @@
 import { safeGetMe } from "@utils/authGuards";
 import { htmlEscape } from "@utils/htmlEscape";
 
-import { Long } from "@mtcute/core";
-
-function toTlLong(id: string | number | bigint): any {
-  if (typeof id === "bigint") return Long.fromString(id.toString());
-  return Long.fromString(String(id));
-}
-
 // YVLU Plugin - 生成文字语录贴纸
 import axios from "axios";
 import _ from "lodash";
@@ -45,87 +38,8 @@ const execFileAsync = promisify(execFile);
 const timeout = 60000; // 超时
 const PYTHON_PATH = "python3"; // Python 路径，可修改为 venv 中的路径，如："/path/to/venv/bin/python"
 
-const customEmojiCache = new Map<string, Buffer | undefined>();
-// hoisted for early custom-emoji download helpers
+// timeout for lightweight RPC helpers (ensureFullUser etc.)
 const YVLU_EMOJI_TIMEOUT_MS = 20000;
-
-async function downloadCustomEmojiBuffer(client: any, emojiId: string): Promise<Buffer | undefined> {
-  if (!client || !emojiId) return undefined;
-  const key = String(emojiId);
-  if (customEmojiCache.has(key)) return customEmojiCache.get(key);
-  try {
-    // Prefer raw TL first — getCustomEmojis drops non-sticker docs as null
-    let doc: any = null;
-    try {
-      const docs = await withTimeout(
-        client.call({
-          _: "messages.getCustomEmojiDocuments",
-          documentId: [toTlLong(key)],
-        }),
-        YVLU_EMOJI_TIMEOUT_MS,
-        "yvlu.getCustomEmojiDocuments",
-      );
-      doc = Array.isArray(docs) ? docs[0] : null;
-    } catch (e: unknown) {
-      logger.warn("yvlu raw getCustomEmojiDocuments 失败", e);
-    }
-
-    if (!doc || (doc._ && doc._ !== "document" && !doc.accessHash && !doc.access_hash)) {
-      try {
-        const stickers = await withTimeout(
-          client.getCustomEmojis([toTlLong(key)]),
-          YVLU_EMOJI_TIMEOUT_MS,
-          "yvlu.getCustomEmojis",
-        );
-        const sticker = stickers?.[0];
-        if (sticker) {
-          const data = await client.downloadAsBuffer(sticker);
-          const buffer = Buffer.from(data);
-          if (Buffer.isBuffer(buffer) && buffer.length > 0) {
-            customEmojiCache.set(key, buffer);
-            return buffer;
-          }
-        }
-      } catch (e: unknown) {
-        logger.warn("getCustomEmojis 下载失败", e);
-      }
-      customEmojiCache.set(key, undefined);
-      return undefined;
-    }
-
-    const location = {
-      _: "inputDocumentFileLocation",
-      id: toTlLong(doc.id),
-      accessHash: toTlLong(doc.accessHash ?? doc.access_hash),
-      fileReference: doc.fileReference ?? doc.file_reference,
-      thumbSize: "",
-    };
-    let data: any;
-    try {
-      const { FileLocation } = await import("@mtcute/core");
-      data = await client.downloadAsBuffer(
-        new FileLocation(location, Number(doc.size) || undefined, doc.dcId ?? doc.dc_id),
-      );
-    } catch {
-      data = await client.downloadAsBuffer(location as any, {
-        dcId: doc.dcId ?? doc.dc_id,
-        fileSize: doc.size,
-      } as any);
-    }
-    const buffer = Buffer.from(data);
-    if (Buffer.isBuffer(buffer) && buffer.length > 0) {
-      customEmojiCache.set(key, buffer);
-      return buffer;
-    }
-    customEmojiCache.set(key, undefined);
-    return undefined;
-  } catch (e: unknown) {
-    logger.warn("下载自定义表情失败", e);
-    customEmojiCache.set(key, undefined);
-    return undefined;
-  }
-}
-
 
 const hashCode = (s: any) => {
   const l = s.length;
@@ -769,6 +683,32 @@ async function downloadProfilePhotoBuffer(client: any, sender: EntityLike): Prom
   return buffer.length > 0 ? buffer : undefined;
 }
 
+async function ensureFullUser(client: any, sender: any): Promise<any> {
+  if (!client || !sender) return sender;
+  try {
+    const isMin = !!(sender.isMin || sender.raw?.min);
+    const hasStatusField =
+      sender.emojiStatus != null ||
+      sender.emoji_status != null ||
+      sender.raw?.emojiStatus != null ||
+      sender.raw?.emoji_status != null;
+    // min peers often omit emojiStatus; also refresh when status field is totally absent
+    if (!isMin && hasStatusField) return sender;
+    if (typeof client.getUsers !== "function") return sender;
+    const users = await withTimeout(
+      client.getUsers(sender),
+      YVLU_EMOJI_TIMEOUT_MS,
+      "yvlu.ensureFullUser.getUsers",
+    );
+    const full = Array.isArray(users) ? users[0] : users;
+    return full || sender;
+  } catch (e: unknown) {
+    logger.debug("yvlu ensureFullUser failed", e);
+    return sender;
+  }
+}
+
+
 interface YvluConfig {
   stickerSetShortName: string;
   _comment?: string;
@@ -967,6 +907,9 @@ class YvluPlugin extends Plugin {
               return;
             }
 
+            // min/incomplete peer 可能没有 emojiStatus，先 getUsers 补全
+            sender = await ensureFullUser(client, sender);
+
             // 准备用户数据
             const senderLike = sender as EntityLike;
             const userId = senderLike.id?.toString();
@@ -1009,7 +952,6 @@ class YvluPlugin extends Plugin {
             previousUserIdentifier = currentUserIdentifier;
 
             let photo: { url: string } | undefined = undefined;
-            let emojiStatusPayload: { custom_emoji_id: string; customEmojiBuffer: Buffer } | undefined;
             if (shouldShowAvatar) {
               try {
                 const buffer = await downloadProfilePhotoBuffer(client, sender as EntityLike);
@@ -1024,22 +966,8 @@ class YvluPlugin extends Plugin {
               } catch (e: unknown) {
                 logger.warn("下载用户头像失败", e);
               }
-
-              // 下载状态自定义表情
-              if (emojiStatus) {
-                try {
-                  const emojiId = String(emojiStatus);
-                  const emojiBuffer = await downloadCustomEmojiBuffer(client, emojiId);
-                  if (emojiBuffer) {
-                    emojiStatusPayload = {
-                      custom_emoji_id: emojiId,
-                      customEmojiBuffer: emojiBuffer.toString("base64"),
-                    };
-                  }
-                } catch (e: unknown) {
-                  logger.warn("下载状态表情失败", e);
-                }
-              }
+              // 远程 quote-api 的 emoji_status 只接受纯字符串 ID，由远端自行拉表情。
+              // 本地无需预下载 customEmojiBuffer（塞进请求会膨胀/易炸 JSON）。
             }
 
             if (i === 0) {
