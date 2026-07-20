@@ -158,7 +158,8 @@ const HELP_TEXT = `<b>封禁管理</b>
 <code>${mainPrefix}unsb</code> 批量解封（仅有管理权的群）
 <code>${mainPrefix}refresh</code> 刷新管理群缓存
 
-回复消息或@用户名`;
+目标：回复消息 / <code>@用户名</code> / <code>用户ID</code>
+<code>用户ID</code> 不要求对方在当前群；会从会话缓存与管理群解析`;
 
 // 解析时间字符串
 function parseTimeString(timeStr?: string): number {
@@ -546,9 +547,11 @@ class UserResolver {
     message: MtcuteMessageContext,
     userId: number,
   ): Promise<{ user: ResolvedUser | null; participant?: tl.TypeInputPeer }> {
+    // 1) 本地 peer 缓存
     let participant = await this.safeGetInputEntity(client, userId);
     let entity = await this.safeGetEntity(client, userId);
 
+    // 2) 当前聊天（即使目标不在此群，也先试 getParticipant accessHash=0）
     if (!participant) {
       participant = await this.resolveParticipantFromContext(
         client,
@@ -560,6 +563,27 @@ class UserResolver {
 
     if (!participant) {
       participant = await this.resolveUserViaGetParticipant(client, chatIdOf(message), userId);
+    }
+
+    // 3) 跨管理群解析：目标不必在当前聊天；任一管理群命中即可拿到 accessHash
+    if (!participant) {
+      const cross = await this.resolveUserAcrossManagedGroups(client, userId, chatIdOf(message));
+      if (cross.participant) {
+        participant = cross.participant;
+        if (!entity && cross.entity) entity = cross.entity;
+      }
+    }
+
+    // 4) 仍无实体时，频道/超群封禁可用 accessHash=0 试探（服务端有时能接受预封禁）
+    if (!participant) {
+      const chatType = this.getChatType(message);
+      if (chatType === "channel") {
+        participant = {
+          _: "inputPeerUser",
+          userId,
+          accessHash: toMtcuteLong(0),
+        } as tl.TypeInputPeer;
+      }
     }
 
     let user: ResolvedUser | null = null;
@@ -578,6 +602,121 @@ class UserResolver {
     }
 
     return { user, participant };
+  }
+
+  /**
+   * 在已缓存的管理群中按 userId 解析 InputPeerUser。
+   * 用于：目标不在当前聊天，但在其它管理群出现过 / 仍是成员。
+   */
+  private static async resolveUserAcrossManagedGroups(
+    client: TelegramClient,
+    userId: number,
+    excludeChatId?: number,
+  ): Promise<{ participant?: tl.TypeInputPeer; entity?: PartialEntity }> {
+    if (!userId) return {};
+    let groups: ManagedGroup[] = [];
+    try {
+      groups = await GroupManager.getManagedGroups(client);
+    } catch (e: unknown) {
+      logger.warn("[aban] resolveUserAcrossManagedGroups: getManagedGroups failed", e);
+      return {};
+    }
+    if (!groups.length) return {};
+
+    const exclude = Number(excludeChatId || 0);
+    const excludeRaw = exclude !== 0
+      ? (String(exclude).startsWith("-100") ? Number(String(exclude).slice(4)) : Math.abs(exclude))
+      : 0;
+
+    // 优先超级群/频道（getParticipant 可对非当前会话成员回填 accessHash）
+    const ordered = [
+      ...groups.filter((g) => g.kind === "channel"),
+      ...groups.filter((g) => g.kind === "chat"),
+    ];
+
+    const limit = (await ensurePLimit())(6);
+    let found: { participant?: tl.TypeInputPeer; entity?: PartialEntity } = {};
+
+    await Promise.all(
+      ordered.map((group) =>
+        limit(async () => {
+          if (found.participant) return;
+          const gid = Number(group.id);
+          if (exclude && (gid === exclude || gid === excludeRaw || toMarkedChannelId(gid) === exclude)) {
+            return;
+          }
+          try {
+            if (group.kind === "channel") {
+              const channelInput = await resolveChannelInput(client, group);
+              const res = await client.call({
+                _: "channels.getParticipant",
+                channel: channelInput as unknown as MtcuteInputChannel,
+                participant: {
+                  _: "inputPeerUser",
+                  userId,
+                  accessHash: toMtcuteLong(0),
+                },
+              } as Parameters<typeof client.call>[0]) as {
+                users?: Array<{
+                  _?: string;
+                  id?: number;
+                  accessHash?: string | number | bigint;
+                  firstName?: string;
+                  lastName?: string;
+                  username?: string;
+                }>;
+              };
+              const matched = (res.users || []).find(
+                (u) => Number(u?.id) === userId && u._ === "user",
+              );
+              if (matched && matched.accessHash != null && !found.participant) {
+                found = {
+                  participant: {
+                    _: "inputPeerUser",
+                    userId,
+                    accessHash: toMtcuteLong(matched.accessHash as string | number),
+                  } as tl.TypeInputPeer,
+                  entity: matched as PartialEntity,
+                };
+              }
+              return;
+            }
+
+            // basic group
+            const full = await client.call({
+              _: "messages.getFullChat",
+              chatId: Math.abs(gid),
+            } as Parameters<typeof client.call>[0]) as {
+              users?: Array<{
+                _?: string;
+                id?: number;
+                accessHash?: string | number | bigint;
+                firstName?: string;
+                lastName?: string;
+                username?: string;
+              }>;
+            };
+            const matched = (full.users || []).find(
+              (u) => Number(u?.id) === userId && u._ === "user",
+            );
+            if (matched && matched.accessHash != null && !found.participant) {
+              found = {
+                participant: {
+                  _: "inputPeerUser",
+                  userId,
+                  accessHash: toMtcuteLong(matched.accessHash as string | number),
+                } as tl.TypeInputPeer,
+                entity: matched as PartialEntity,
+              };
+            }
+          } catch {
+            // 非成员 / 无权限 / 无效群 — 静默跳过
+          }
+        }),
+      ),
+    );
+
+    return found;
   }
 
   /** 在频道/超级群内用裸 userId 解析成员（getParticipant + accessHash 0） */
@@ -1781,7 +1920,7 @@ class CommandHandlers {
         logger.warn(`[aban] 获取用户失败 uid=null args=${JSON.stringify(args)} err=${resolutionError}`);
         await MessageManager.smartEdit(
           message,
-          "❌ 获取用户失败（请回复目标用户的消息，或附带 @用户名 / 用户ID；true 仅作确认参数）",
+          "❌ 获取用户失败（回复消息 / @用户名 / 用户ID；true 仅确认）",
         );
         return;
       }
@@ -1789,7 +1928,7 @@ class CommandHandlers {
       const basicGroupActionAllowedWithoutParticipant = chatType === 'chat' && ['ban', 'kick'].includes(action);
       if (!participant && ['ban', 'unban', 'mute', 'unmute', 'kick'].includes(action) && !basicGroupActionAllowedWithoutParticipant) {
         const errorText = resolutionError === 'TARGET_ENTITY_UNRESOLVABLE'
-          ? '❌ 无法解析该目标的 Telegram 实体，请使用回复消息或 @用户名 后再试'
+          ? '❌ 无法解析该用户ID（会话未见过且不在管理群中）。可先回复其一则消息，或确认 ID 正确'
           : '❌ 获取用户失败';
         await MessageManager.smartEdit(message, errorText);
         return;
@@ -1892,7 +2031,7 @@ class CommandHandlers {
           message,
           resolutionError === "INVALID_TARGET"
             ? "❌ 无法识别目标（不要用 true 当用户名；请回复目标消息，或使用 @用户名 / 用户ID）"
-            : "❌ 获取用户失败（请回复目标用户的消息，或附带 @用户名 / 用户ID）",
+            : "❌ 获取用户失败（回复消息 / @用户名 / 用户ID）",
         );
         return;
       }
@@ -1900,7 +2039,7 @@ class CommandHandlers {
       if (!participant) {
         logger.warn(`[aban/sb] 实体不可解析 uid=${uid} source=${source} err=${resolutionError}`);
         const errorText = resolutionError === 'TARGET_ENTITY_UNRESOLVABLE'
-          ? '❌ 无法解析该目标的 Telegram 实体，请先通过回复消息、@用户名或让该目标在当前会话中可见后再试'
+          ? '❌ 无法解析该用户ID（会话未见过且不在任一管理群中）。可先 `.refresh` 后重试，或回复其一则消息'
           : '❌ 获取用户失败';
         await MessageManager.smartEdit(message, errorText);
         return;
@@ -2047,14 +2186,14 @@ class CommandHandlers {
         logger.warn(`[aban] 获取用户失败 uid=null args=${JSON.stringify(args)} err=${resolutionError}`);
         await MessageManager.smartEdit(
           message,
-          "❌ 获取用户失败（请回复目标用户的消息，或附带 @用户名 / 用户ID；true 仅作确认参数）",
+          "❌ 获取用户失败（回复消息 / @用户名 / 用户ID；true 仅确认）",
         );
         return;
       }
 
       if (!participant) {
         const errorText = resolutionError === 'TARGET_ENTITY_UNRESOLVABLE'
-          ? '❌ 无法解析该目标的 Telegram 实体，请先通过回复消息、@用户名或让该目标在当前会话中可见后再试'
+          ? '❌ 无法解析该用户ID（会话未见过且不在任一管理群中）。可先 `.refresh` 后重试，或回复其一则消息'
           : '❌ 获取用户失败';
         await MessageManager.smartEdit(message, errorText);
         return;
