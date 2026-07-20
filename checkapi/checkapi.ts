@@ -261,16 +261,17 @@ async function lmf(provider:string,key:string,baseUrl:string): Promise<string>{
 }
 
 // ── Full check ──
-async function fcv2(provider:string,key:string,baseUrl:string): Promise<string[]>{
+async function fcv2(provider:string,key:string,baseUrl?:string): Promise<string[]>{
   const rs:string[]=[];const info=dp(key,baseUrl);
+  const base = info.baseUrl || "";
   rs.push(`🔍 <b>${info.displayName}</b> (${info.provider}, ${info.confidence})`);
   rs.push(`🔑 ${mk(key)}`);
   rs.push(`\n💰 <b>账户余额</b>：`);
-  try{rs.push(await cb(provider,key,baseUrl));}catch(e:unknown){rs.push(`⚠️ ${ge(e)}`);}
+  try{rs.push(await cb(provider,key,base));}catch(e:unknown){rs.push(`⚠️ ${ge(e)}`);}
   rs.push(`\n💬 <b>对话测试</b>：`);
-  try{const chat=await ct(provider,key,baseUrl);if(chat.ok){rs.push(`✅ 响应: "${chat.text}" (${chat.elapsedMs}ms) | 🤖 <code>${chat.model}</code>`);if(chat.usage)rs.push(`📊 Token: 入${chat.usage.prompt} 出${chat.usage.completion} 计${chat.usage.total}`);if(chat.headers)rs.push(fh(chat.headers));}else{rs.push(`❌ 失败: ${chat.error||"无响应"}`);}}catch(e:unknown){rs.push(`⚠️ ${ge(e)}`);}
+  try{const chat=await ct(provider,key,base);if(chat.ok){rs.push(`✅ 响应: "${chat.text}" (${chat.elapsedMs}ms) | 🤖 <code>${chat.model}</code>`);if(chat.usage)rs.push(`📊 Token: 入${chat.usage.prompt} 出${chat.usage.completion} 计${chat.usage.total}`);if(chat.headers)rs.push(fh(chat.headers));}else{rs.push(`❌ 失败: ${chat.error||"无响应"}`);}}catch(e:unknown){rs.push(`⚠️ ${ge(e)}`);}
   rs.push(`\n📋 <b>可用模型</b>：`);
-  try{rs.push(await lmf(provider,key,baseUrl));}catch(e:unknown){rs.push(`⚠️ ${ge(e)}`);}
+  try{rs.push(await lmf(provider,key,base));}catch(e:unknown){rs.push(`⚠️ ${ge(e)}`);}
   return rs;
 }
 
