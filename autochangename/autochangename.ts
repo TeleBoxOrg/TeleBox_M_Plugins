@@ -1153,7 +1153,14 @@ class AutoChangeNamePlugin extends Plugin {
         await nameManager.updateUserProfile(userId, true);
         await msg.edit({ text: html(`✅ <b>动态昵称已启用</b>\n\n🕐 当前时区: <code>${settings.timezone}</code>\n📝 显示模式: <code>${settings.mode}</code>\n⏰ 更新频率: 每分钟`) });
       } else {
-        await msg.edit({ text: html(`✅ <b>动态昵称已禁用</b>`) });
+        // 关闭自动更新：停止调度器、恢复原始昵称
+        const stillEnabled = await DataManager.getAllEnabledUsers();
+        if (stillEnabled.length === 0) nameManager.stopAutoUpdate();
+        try {
+          const client = await getGlobalClient();
+          if (client) await client.updateProfile({ firstName: settings.original_first_name || "", lastName: settings.original_last_name || undefined });
+        } catch {}
+        await msg.edit({ text: html(`✅ <b>动态昵称已禁用</b>\n已恢复原始昵称`) });
       }
     } else {
       await msg.edit({ text: html("❌ 设置保存失败") });

@@ -593,7 +593,9 @@ async function forwardedSource(msg: any): Promise<{ peer?: any; entity?: any; na
       const entity = await withTimeout(client.getEntity(peer), QUOTE_RPC_TIMEOUT_MS, "forwardedSource.getEntity");
       const name = entity?.firstName || entity?.title || entity?.name || headerName || "Forwarded";
       return { peer, entity, name, anonymous: false };
-    } catch (_) {}
+    } catch (err) {
+    console.debug("[yvlu] forwardedSource.getEntity failed:", err?.message || err);
+  }
   }
   if (headerName) return { name: headerName, anonymous: true };
   return { anonymous: true };
