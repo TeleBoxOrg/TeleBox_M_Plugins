@@ -22,6 +22,7 @@ import { promisify } from "util";
 import { logger } from "@utils/logger";
 import { safeGetReplyMessage } from "@utils/safeGetMessages";
 import { htmlEscape } from "@utils/htmlEscape";
+import { tryGetCurrentRuntime } from "@utils/runtimeAccess";
 
 interface ProviderConfig {
   tag: string;
@@ -3910,8 +3911,10 @@ class ConfigFeature extends BaseFeatureHandler {
     args: string[],
     configManager: ConfigManager,
   ): Promise<void> {
+    const meId = tryGetCurrentRuntime()?.meId;
+    const isSavedMessage = meId != null && String(msg.chat.id) === meId;
     requireUser(
-      !!(msg as unknown as { savedPeerId?: unknown }).savedPeerId,
+      isSavedMessage,
       "出于安全考虑，禁止在公开场景添加/修改 API 密钥",
     );
     const { tag, url, key, type } = this.parseAddConfigArgs(args);

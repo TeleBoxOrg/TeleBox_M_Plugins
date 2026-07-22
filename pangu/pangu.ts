@@ -12,6 +12,7 @@ import _ from "lodash";
 import { logger } from "@utils/logger";
 import { getErrorMessage } from "@utils/errorHelpers";
 import { htmlEscape } from "@utils/htmlEscape";
+import { tryGetCurrentRuntime } from "@utils/runtimeAccess";
 
 const prefixes = getPrefixes();
 const mainPrefix = prefixes[0];
@@ -548,9 +549,10 @@ class PanguPlugin extends Plugin {
   listenMessageHandler = async (msg: MessageContext, options?: { isEdited?: boolean }): Promise<void> => {
     try {
       if (!this.db) return;
-      const savedMessage = (msg as { savedPeerId?: unknown }).savedPeerId;
+      const meId = tryGetCurrentRuntime()?.meId;
+      const isSavedMessage = meId != null && String(msg.chat.id) === meId;
       // 仅处理自己发出的消息 或 Saved Messages
-      if (!(msg.isOutgoing || savedMessage)) return;
+      if (!(msg.isOutgoing || isSavedMessage)) return;
       
       // 忽略空消息
       if (!msg.text || msg.text.trim().length === 0) return;
